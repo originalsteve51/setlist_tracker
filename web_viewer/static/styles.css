@@ -1,0 +1,22 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    color: black;
+    margin: 0;
+    padding: 20px;
+}
+#row-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.row {
+    padding: 10px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+.row.active {
+    background-color: blue;
+    color: white;
+}
