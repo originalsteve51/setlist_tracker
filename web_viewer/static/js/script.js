@@ -1,3 +1,10 @@
+/*
+Javascript that obtains row data in JSON format by getting /get_rows.
+The JSON is parsed row by row. Data is added to the rowContainer div 
+of index.html as div elements that are children of the rowContainer
+div. Each row can be toggled by clicking. Toggling changes the color.
+is
+*/
 const rowContainer = document.getElementById('row-container');
 function createRow(text, index) {
     const rowDiv = document.createElement('div');
