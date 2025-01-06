@@ -8,7 +8,6 @@ from spotipy.oauth2 import SpotifyOAuth
 from openai import OpenAI
 
 
-
 web_controller_url = os.environ['WEB_CONTROLLER_URL']
 print('Web controller url: ', web_controller_url)
 
