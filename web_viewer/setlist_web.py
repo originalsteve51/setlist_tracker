@@ -10,7 +10,9 @@ debug_mode = os.environ.get('DEBUG_MODE')
 
 # Global data that is set from the engine and later provided
 # to the view page
+rows = []
 setlist_data = []
+songs_info = []
 
 print(f"run_on_host: {run_on_host}, Using Port: {using_port}, Update interval: {update_interval}, Debug: {debug_mode}")
 
@@ -38,8 +40,24 @@ def load_setlist():
     json_string = request.get_json()
     setlist_data = json.loads(json_string)
 
+    for _ in range(0, len(setlist_data)):
+        songs_info.append(setlist_data[_]['song_info'])
+        print(setlist_data[_]['song_info'])
+    
     # Respond to the client with an OK status (jsonify with no args does this)
     return jsonify()
+
+@app.route('/get_song_info', methods=['GET'])
+def get_song_info():
+    song_number = request.args.get('song_number') 
+    song_name = f'Song Number: {song_number}'
+    return render_template('info.html', song_name=song_name, song_number=song_number)
+
+@app.route('/song_info', methods=['GET'])
+def song_info():
+    song_number = request.args.get('song_number') 
+    song_info = songs_info[int(song_number)] 
+    return jsonify(song_info)   
 
 """
 The index page calls /get_rows to obtain the set list data.
@@ -47,6 +65,8 @@ The index page calls /get_rows to obtain the set list data.
 @app.route('/get_rows',methods=['GET'])
 def get_rows():
     global setlist_data
+    global rows
+    global songs_info
 
     # Get a clean start!
     rows.clear()
@@ -56,10 +76,26 @@ def get_rows():
     # on the index page.
     for _ in range(len(setlist_data)):
         row_data = setlist_data[_]
+        # print(row_data)
+        a_row = list()
+        a_row.append(f"{row_data['song_name']}")
+        a_row.append(f"{row_data['artist_name']}")
+        a_row.append(f"{row_data['album_name']}")
+        a_row.append(f"{row_data['year_released']}")
+
+
+        rows.append(a_row)
+
+        #rows = [[f"Row {i + 1} Col {j + 1}" for j in range(4)] for i in range(25)]
+
+        # print(rows)
+
+        """
         rows.append(f"{row_data['song_name']}, \
                       {row_data['artist_name']}, \
                       {row_data['album_name']}, \
                       {row_data['year_released']}")
+        """
     
     # Return the list in JSON form for the page to render.
     return jsonify(rows)

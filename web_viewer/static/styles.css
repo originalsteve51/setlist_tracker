@@ -5,12 +5,31 @@ body {
     margin: 0;
     padding: 20px;
 }
+#header {
+    display: flex; /* Use Flexbox for header column layout */
+    background-color: blue; /* Header background color */
+    color: white; /* Header text color */
+    position: fixed; /* Fix the header at the top */
+    top: 0; /* Position at the very top */
+    left: 0;
+    right: 0;
+    padding: 10px 0; /* Padding around header */
+    z-index: 1000; /* Bring it above other elements */
+}
+.column {
+    flex: 1; /* Equal width for all columns in header */
+    text-align: center; /* Center text */
+}
+
 #row-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-}
+    gap: 10px; /* Space between rows */
+    margin-top: 60px; /* Create space below the fixed header */
+} 
 .row {
+    display: flex; /* Use Flexbox for row layout */
+    justify-content: space-between; /* Space columns evenly */
     padding: 10px;
     border: 1px solid #ccc;
     cursor: pointer;
@@ -19,4 +38,11 @@ body {
 .row.active {
     background-color: blue;
     color: white;
+}
+.row.active-row {
+    background-color: yellow; /* Highlight the active row */
+    color: black; /* Change text color to black */
+}
+a, u {
+  text-decoration: none;
 }

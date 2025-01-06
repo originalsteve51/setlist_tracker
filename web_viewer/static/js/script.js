@@ -2,23 +2,35 @@
 Javascript that obtains row data in JSON format by getting /get_rows.
 The JSON is parsed row by row. Data is added to the rowContainer div 
 of index.html as div elements that are children of the rowContainer
-div. Each row can be toggled by clicking. Toggling changes the color.
-is
+div. Each row can be toggled by clicking. 
 */
+song_number = 0
+
 const rowContainer = document.getElementById('row-container');
-function createRow(text, index) {
+function createRow(textArray) {
     const rowDiv = document.createElement('div');
     rowDiv.className = 'row';
-    rowDiv.innerText = text;
-    rowDiv.onclick = () => {
-        rowDiv.classList.toggle('active');
-    };
-    rowDiv.setAttribute('data-index', index);
+    // Create four columns
+    textArray.forEach((text, index) => {
+        const columnDiv = document.createElement('div');
+        columnDiv.className = 'column';
+        columnDiv.innerText = text;
+        // Update whole row on column click
+        columnDiv.onclick = (event) => {
+            event.stopPropagation(); // Prevent triggering parent row click
+            rowDiv.classList.toggle('active-row');
+        };
+        rowDiv.appendChild(columnDiv);
+    });
+    const colDiv = document.createElement('div');
+    colDiv.innerHTML='<a class="fa fa-info-circle" style="font-size:18px" href="/get_song_info?song_number='+song_number.toString()+'"></a>';
+    song_number = song_number+1;
+    rowDiv.appendChild(colDiv);
     return rowDiv;
 }
 async function fetchRows() {
     try {
-        const response = await fetch('/get_rows'); // Adjust this URL to your Flask endpoint
+        const response = await fetch('/get_rows'); // Here we get the data from setlist_web.py
         const data = await response.json();
         populateRows(data);
     } catch (error) {
@@ -27,13 +39,12 @@ async function fetchRows() {
 }
 function populateRows(data) {
     rowContainer.innerHTML = ''; // Clear existing rows
-    data.forEach((text, index) => {
-        const row = createRow(text, index);
+    data.forEach((textArray) => {
+        console.log(textArray)
+        const row = createRow(textArray);
         rowContainer.appendChild(row);
     });
 }
-
-// setInterval(fetchRows, 10000); // Fetch data every second
 
 document.addEventListener("DOMContentLoaded", 
     function()

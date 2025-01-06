@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Set List</title>
+    <title>Song Information</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')  }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
      <div id="header">
-        <div class="column">Song Name</div>
-        <div class="column">Artist Name</div>
-        <div class="column">Album</div>
-        <div class="column">Release Date</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+        <div class="column">Information about '{{song_name}}'</div>
     </div>
     <div id="row-container">
-        <!-- Rows will be populated here by JavaScript -->
+        
     </div>
     
-    <script src="{{ url_for('static', filename='js/script.js')  }}"></script>
+    <script> song_number = {{song_number}} </script>
+    <script src="{{ url_for('static', filename='js/script_info.js')  }}"></script>
+
 </body>
 </html>
