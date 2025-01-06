@@ -2,6 +2,7 @@ import cmd
 import requests
 import json
 import os
+import sys
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -206,7 +207,6 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print('Interrupted by ctrl-C, attempting to clean up first')
             try:
-                cleanup_before_exiting(cp)
                 sys.exit(0)
             except SystemExit:
                 os._exit(0)
@@ -215,7 +215,8 @@ if __name__ == '__main__':
     
             if exception_name == 'ExitCmdException':
                 continue_running = False
-                print('\nExiting the program...')
+                print('\nEXITING the program...')
+                os._exit(0)
                 continue
             else:
                 display_general_exception(e)
