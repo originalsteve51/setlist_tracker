@@ -13,6 +13,7 @@ debug_mode = os.environ.get('DEBUG_MODE')
 rows = []
 setlist_data = []
 songs_info = []
+playlist_name='My Playlist'
 
 print(f"run_on_host: {run_on_host}, Using Port: {using_port}, Update interval: {update_interval}, Debug: {debug_mode}")
 
@@ -22,7 +23,8 @@ contents were previously posted here from the engine.
 """
 @app.route('/')
 def home():
-    return render_template('index.html')
+    global playlist_name
+    return render_template('index.html', playlist_name=playlist_name)
 
 """
 The set list is prepared by the engine and posted here as a list of JSON
@@ -31,9 +33,11 @@ rows containing info about songs.
 @app.route('/load_setlist',methods=['POST'])
 def load_setlist():
     global setlist_data
+    global songs_info
 
-    # First, clear out the setlist in case there's already somethong there
+    # First, clear out the setlist and info in case there's already something there
     setlist_data.clear()
+    songs_info.clear()
 
     # Data posted here by the engine is saved in global data for retrieval
     # by requests issued to /get_rows from a web page wanting to view the set list
@@ -41,16 +45,16 @@ def load_setlist():
     setlist_data = json.loads(json_string)
 
     for _ in range(0, len(setlist_data)):
-        songs_info.append(setlist_data[_]['song_info'])
-        print(setlist_data[_]['song_info'])
+        songs_info.append({'info': setlist_data[_]['song_info'], 'name': setlist_data[_]['song_name'] })
+        print(songs_info[_]['name'])
     
     # Respond to the client with an OK status (jsonify with no args does this)
     return jsonify()
 
 @app.route('/get_song_info', methods=['GET'])
 def get_song_info():
-    song_number = request.args.get('song_number') 
-    song_name = f'Song Number: {song_number}'
+    song_number = int(request.args.get('song_number')) 
+    song_name = songs_info[song_number]['name']
     return render_template('info.html', song_name=song_name, song_number=song_number)
 
 @app.route('/song_info', methods=['GET'])
@@ -58,6 +62,16 @@ def song_info():
     song_number = request.args.get('song_number') 
     song_info = songs_info[int(song_number)] 
     return jsonify(song_info)   
+
+@app.route('/playlist_info', methods=['POST'])
+def playlist_info():
+    global playlist_name
+    json_string = request.get_json()
+    playlist_data = json.loads(json_string)
+    playlist_name = playlist_data['name']
+
+    return jsonify()
+
 
 """
 The index page calls /get_rows to obtain the set list data.

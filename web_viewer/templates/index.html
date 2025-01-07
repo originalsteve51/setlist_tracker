@@ -6,19 +6,26 @@
     <title>Set List</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css')  }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
 </head>
 <body>
-     <div id="header">
-        <div class="column">Song Name</div>
-        <div class="column">Artist Name</div>
-        <div class="column">Album</div>
-        <div class="column">Release Date</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-    </div>
-    <div id="row-container">
-        <!-- Rows will be populated here by JavaScript -->
-    </div>
-    
+    <header class="header">
+        <div class="title">{{playlist_name}}</div>
+        <div class="columns">
+            <div class="columnheader">Song Name</div>
+            <div class="columnheader">Artist</div>
+            <div class="columnheader">Album</div>
+            <div class="columnheader">Released</div>
+            <div class="columnheader narrow">&nbsp;</div>
+        </div>
+    </header>
+    <main class="content">
+        <div id="row-container">
+            <!-- Rows will be populated here by JavaScript -->
+        </div>
+    </main>    
     <script src="{{ url_for('static', filename='js/script.js')  }}"></script>
 </body>
 </html>

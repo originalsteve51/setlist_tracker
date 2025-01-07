@@ -24,6 +24,7 @@ function createRow(textArray) {
     });
     const colDiv = document.createElement('div');
     colDiv.innerHTML='<a class="fa fa-info-circle" style="font-size:18px" href="/get_song_info?song_number='+song_number.toString()+'"></a>';
+    colDiv.className = 'column.right';
     song_number = song_number+1;
     rowDiv.appendChild(colDiv);
     return rowDiv;

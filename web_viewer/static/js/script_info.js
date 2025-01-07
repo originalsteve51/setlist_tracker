@@ -5,7 +5,8 @@ async function fetchInfo() {
     	console.log('fetchInfo called')
         const response = await fetch('/song_info?song_number='+song_number); // Here we get the data from setlist_web.py
         const data = await response.json();
-        rowContainer.innerHTML = data;
+        console.log(data['info'])
+        rowContainer.innerHTML = data['info'];
     } catch (error) {
         console.error('Error fetching data:', error);
     }

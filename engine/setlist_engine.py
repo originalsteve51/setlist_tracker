@@ -12,7 +12,10 @@ from openai import OpenAI
 web_controller_url = os.environ['WEB_CONTROLLER_URL']
 print('Web controller url: ', web_controller_url)
 
+max_ai_calls_for_info = int(os.environ['MAX_AI_CALLS_FOR_INFO'])
+
 set_data = []
+playlist_name = "A Playlist"
 
 #-----------------------------------------------------------
 # Spotify is a class that provides access to the Spotify API
@@ -48,8 +51,11 @@ class Playlist():
         return lists
 
     def process_playlist(self, pl_index):
+        global playlist_name
+
         playlist = self.get_playlists()[f"{pl_index}"]
-        print(f'{playlist[0]}')
+        playlist_name = f'{playlist[0]}'
+        print(playlist_name)
         pl_id = f'spotify:playlist:{playlist[1]}'
 
         self.playlist_processing(pl_id)
@@ -98,7 +104,10 @@ class Playlist():
                     release_date = 'Unknown'
                 row_data['year_released'] = release_date
                 
-                row_data['song_info'] = self.ai.get_song_info(artist_name, row_data['song_name'])
+                if idx < max_ai_calls_for_info:
+                    row_data['song_info'] = self.ai.get_song_info(artist_name, row_data['song_name'])
+                else:
+                    row_data['song_info'] = 'Not available due to test mode'
                 set_data.append(row_data)          
               
 
@@ -118,8 +127,9 @@ class OpenAIAccessor():
             'messages': [{'role': 'user', 
                         'content': f"Give me history including lyrical themes of the \
                                     {artist}'s song '{song_name}', \
-                                    max length 400 words, using words that a fifth grader can understand. Break this into paragraphs \
-                                    with <p> at the start of each paragraph and </p> \
+                                    max length 400 words, using words that a fifth grader \
+                                    can understand. Break this into paragraphs \
+                                    with <p> at the start of each paragraph and </p><br/> \
                                     at the end of each paragraph."}],
             'max_tokens':500,
             'temperature':0.8
@@ -150,7 +160,12 @@ class CommandProcessor(cmd.Cmd):
         
     
     def do_webload(self, _):
+        global playlist_name
+
         print(f'Loading set list data to web controller')
+        playlist_data = {'name': playlist_name}
+        requests.post(web_controller_url+'/playlist_info',
+                            json=json.dumps(playlist_data))
 
         requests.post(web_controller_url+'/load_setlist',
                             json=json.dumps(set_data))
@@ -217,7 +232,6 @@ if __name__ == '__main__':
                 continue_running = False
                 print('\nEXITING the program...')
                 os._exit(0)
-                continue
             else:
                 display_general_exception(e)
             
