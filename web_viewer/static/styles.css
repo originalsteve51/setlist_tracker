@@ -6,6 +6,13 @@
 }
 body {
     font-family: Arial, sans-serif;
+
+      /* Prevent text-selection in each of the main browsers */
+      -webkit-user-select: none; /* Safari */
+      -moz-user-select: none;    /* Firefox */
+      -ms-user-select: none;     /* Internet Explorer */
+      user-select: none;         /* Non-prefixed version, currently for Chrome */
+    
 }
 .header {
     position: fixed;
