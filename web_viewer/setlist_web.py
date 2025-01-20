@@ -15,6 +15,8 @@ setlist_data = []
 songs_info = []
 playlist_name='My Playlist'
 
+songs_played = []
+
 print(f"run_on_host: {run_on_host}, Using Port: {using_port}, Update interval: {update_interval}, Debug: {debug_mode}")
 
 """
@@ -25,6 +27,33 @@ contents were previously posted here from the engine.
 def home():
     global playlist_name
     return render_template('index.html', playlist_name=playlist_name)
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    global playlist_name
+    return render_template('admin.html', playlist_name=playlist_name)
+
+@app.route('/api/song_played', methods=['POST'])
+def song_played():
+    global songs_played
+    data = request.get_json()
+
+    if 'song_id' in data:
+        song_id = data['song_id']
+        # print(f'Song id number: {song_id}')
+        
+        if not song_id in songs_played:
+            songs_played.append(song_id)
+        else:
+            songs_played.remove(song_id)
+        print(songs_played)
+
+        return jsonify(success=True, message=f'Song id {song_id} was marked as played')
+    else:
+        print(f'Song id not received in request')
+        return jsonify(success=False, message=f'Song id not received')
+
+    
 
 """
 The set list is prepared by the engine and posted here as a list of JSON
@@ -82,34 +111,37 @@ def get_rows():
     global rows
     global songs_info
 
+    caller = request.args.get('id')
+
     # Get a clean start!
     rows.clear()
 
     # Build the list of rows from the JSON data provided by the engine.
     # Each row is just a string with song information that will be shown
     # on the index page.
-    for _ in range(len(setlist_data)):
-        row_data = setlist_data[_]
-        # print(row_data)
-        a_row = list()
-        a_row.append(f"{row_data['song_name']}")
-        a_row.append(f"{row_data['artist_name']}")
-        a_row.append(f"{row_data['album_name']}")
-        a_row.append(f"{row_data['year_released']}")
+    if caller == 'admin':
+        for song_number in range(len(setlist_data)):
+            row_data = setlist_data[song_number]
+            a_row = list()
+            a_row.append(f"{row_data['song_name']}")
+            a_row.append(f"{row_data['artist_name']}")
+            a_row.append(f"{row_data['album_name']}")
+            a_row.append(f"{row_data['year_released']}")
+            a_row.append(f"{song_number}")
+            rows.append(a_row)
+    else:
+        for song_idx in range(len(songs_played)):    
+            reverse_songs_played = songs_played[::-1]
+            song_number = reverse_songs_played[song_idx]
+            row_data = setlist_data[song_number]
+            a_row = list()
+            a_row.append(f"{row_data['song_name']}")
+            a_row.append(f"{row_data['artist_name']}")
+            a_row.append(f"{row_data['album_name']}")
+            a_row.append(f"{row_data['year_released']}")
+            a_row.append(f"{song_number}")
+            rows.append(a_row)
 
-
-        rows.append(a_row)
-
-        #rows = [[f"Row {i + 1} Col {j + 1}" for j in range(4)] for i in range(25)]
-
-        # print(rows)
-
-        """
-        rows.append(f"{row_data['song_name']}, \
-                      {row_data['artist_name']}, \
-                      {row_data['album_name']}, \
-                      {row_data['year_released']}")
-        """
     
     # Return the list in JSON form for the page to render.
     return jsonify(rows)

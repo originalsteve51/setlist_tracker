@@ -1,0 +1,30 @@
+Python program setlist_engine.py
+________________________________
+
+
+The SetList engine is a program that can access Spotify via their api.
+
+The secret keys for accessing my Spotify account using the api are held in file secrets.sh
+
+The secrets file also has my api key for accessing OpenAI programatically.
+
+Finally, the secrets file has the (non-secret) url of the server where the web server
+is running.
+
+Do not attempt to upload secrets.sh to GitHub. It knows about secret keys and
+will block any attempt to push them.
+
+To start the program do the following
+
+./activate_run.sh secrets.sh
+
+activate_run.sh activates the Python virtual environment that includes libraries needed
+to run the engine. This includes Spotipy (which wraps Spotify's api) and other libraries.
+
+Once started issue 'playlists' command to see available playlists.
+
+Next issue 'stagelist n', where n is the number of the playlist you want to load.
+
+During stagelist processing, OpenAI is called to write a blurb about each song.
+
+After a list is staged, issue the 'webload' command. This pushes the song information, including the OpenAI blurbs, to the web server.

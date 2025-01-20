@@ -9,10 +9,7 @@ song_number = 0
 const rowContainer = document.getElementById('row-container');
 function createRow(textArray) {
     const rowDiv = document.createElement('div');
-    if (song_number == 0)
-        rowDiv.className = 'row-first';
-    else
-        rowDiv.className = 'row';
+    rowDiv.className = 'row';
     // Create four columns
     textArray.forEach((text, index) => {
         if (index<4)
@@ -20,26 +17,26 @@ function createRow(textArray) {
             const columnDiv = document.createElement('div');
             columnDiv.className = 'column';
             columnDiv.innerText = text;
+            columnDiv.index = song_number;
             // Update whole row on column click
-            //columnDiv.onclick = (event) => {
-            //    event.stopPropagation(); // Prevent triggering parent row click
-            //    rowDiv.classList.toggle('active-row');
-            //};
+            columnDiv.onclick = (event) => {
+                event.stopPropagation(); // Prevent triggering parent row click
+                rowDiv.classList.toggle('active-row');
+                notifyServerSongPlayed(columnDiv.index);
+            };
             rowDiv.appendChild(columnDiv);
         }
     });
-    
     const colDiv = document.createElement('div');
-    colDiv.innerHTML='<a class="fa fa-info-circle" style="font-size:18px" href="/get_song_info?song_number='+textArray[4]+'"></a>';
+    colDiv.innerHTML='<a class="fa fa-info-circle" style="font-size:18px" href="/get_song_info?song_number='+song_number.toString()+'"></a>';
     colDiv.className = 'column.right';
     song_number = song_number+1;
     rowDiv.appendChild(colDiv);
     return rowDiv;
 }
 async function fetchRows() {
-    song_number = 0;
     try {
-        const response = await fetch('/get_rows'); // Here we get the data from setlist_web.py
+        const response = await fetch('/get_rows?id=admin'); // Here we get the data from setlist_web.py
         const data = await response.json();
         populateRows(data);
     } catch (error) {
@@ -55,6 +52,33 @@ function populateRows(data) {
     });
 }
 
+async function notifyServerSongPlayed(songIndex) 
+{
+    try 
+    {
+        const response = await fetch('/api/song_played', 
+        {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ song_id: songIndex })
+        });
+
+        if (!response.ok) 
+        {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+
+
+        const result = await response.json();
+        console.log('Server response:', result);
+    } catch (error) 
+    {
+        console.error('Error notifying server:', error);
+    }
+}
+
+
+
 document.addEventListener("DOMContentLoaded", 
     function()
     {
@@ -64,6 +88,5 @@ document.addEventListener("DOMContentLoaded",
         // the list keeps repeating itself
         rowContainer.innerHTML = ''; // Clear existing rows
         fetchRows();
-        setInterval(fetchRows, 1000)
     });
 

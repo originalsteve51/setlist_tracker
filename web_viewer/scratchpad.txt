@@ -1,0 +1,10 @@
+
+
+Start the webviewer as follows:
+
+./activate_run.sh dev_tracker.sh
+
+    -- OR --
+./activate_run.sh production_tracker.sh
+
+The host info in your choice is used to run the web server.     
