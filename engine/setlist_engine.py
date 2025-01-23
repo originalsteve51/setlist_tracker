@@ -1,3 +1,5 @@
+
+
 import cmd
 import requests
 import json
@@ -8,14 +10,15 @@ from spotipy.oauth2 import SpotifyOAuth
 
 from openai import OpenAI
 
+from player import Player
+from playlist import Playlist
+
 
 web_controller_url = os.environ['WEB_CONTROLLER_URL']
 print('Web controller url: ', web_controller_url)
 
-max_ai_calls_for_info = int(os.environ['MAX_AI_CALLS_FOR_INFO'])
 
-set_data = []
-playlist_name = "A Playlist"
+
 
 #-----------------------------------------------------------
 # Spotify is a class that provides access to the Spotify API
@@ -37,78 +40,6 @@ class Spotify():
         ccm=SpotifyOAuth(scope=ascope, open_browser=True)
         self.sp = spotipy.Spotify(client_credentials_manager=ccm)
 
-class Playlist():
-    def __init__(self, sp, ai):
-        self.sp = sp
-        self.ai = ai
-        self.track_set = set(())
-
-    def get_playlists(self):
-        results = self.sp.current_user_playlists(limit=50)
-        lists = {}
-        for i, item in enumerate(results['items']):
-            lists[str(i)] = [item['name'], item['id']]
-        return lists
-
-    def process_playlist(self, pl_index):
-        global playlist_name
-
-        playlist = self.get_playlists()[f"{pl_index}"]
-        playlist_name = f'{playlist[0]}'
-        print(playlist_name)
-        pl_id = f'spotify:playlist:{playlist[1]}'
-
-        self.playlist_processing(pl_id)
-
-    def playlist_processing(self, pl_id):
-        global set_data
-
-        set_data.clear()
-        
-        offset = 0
-        response = self.sp.playlist_items(pl_id,
-                                    offset=offset,
-                                    fields='items.track.name, \
-                                            items.track.id, \
-                                            items.track.artists.name, \
-                                            items.track.album.name, \
-                                            items.track.album.id, \
-                                            total',
-                                    additional_types=['track'])
-
-        if len(response['items']) != 0:
-            # print(response['items'][0])
-            album_name = 'album_name'
-            year_released = '2012'
-            for idx in range(0, len(response['items'])):
-                row_data = dict()
-                track = response['items'][idx]['track']
-                artist_name = response['items'][idx]['track']['artists'][0]['name']
-                album_name = response['items'][idx]['track']['album']['name']
-                album_id = response['items'][idx]['track']['album']['id']
-                track_id = track['id']
-                #track_urn = f'spotify:track:{track_id}'
-                #track_info = sp.track(track_urn)
-                # artist_name = track_info['album']['artists'][0]['name']
-                # print(track['name'], artist_name)
-                row_data['song_name'] = track['name']
-                row_data['artist_name'] = artist_name
-                row_data['album_name'] = album_name
-                # row_data['year_released'] = '1998'
-
-                album_response = self.sp.album(album_id)
-                release_date = 'Unknown'
-                if 'release_date' in album_response.keys():
-                    release_date = album_response['release_date']
-                else:
-                    release_date = 'Unknown'
-                row_data['year_released'] = release_date
-                
-                if idx < max_ai_calls_for_info:
-                    row_data['song_info'] = self.ai.get_song_info(artist_name, row_data['song_name'])
-                else:
-                    row_data['song_info'] = 'Not available due to test mode'
-                set_data.append(row_data)          
               
 
 class OpenAIAccessor():
@@ -140,6 +71,12 @@ class OpenAIAccessor():
 
         return json_info['choices'][0]['message']['content']
 
+#-------------------------------------------------------------------
+# ExitCmdException class - Just so we have a good name when breaking
+# out of the command loop with an Exception
+#-------------------------------------------------------------------
+class ExitCmdException(Exception):
+    pass 
 
 
 
@@ -149,47 +86,84 @@ class CommandProcessor(cmd.Cmd):
         spotify = Spotify()
         self.sp = spotify.sp
         self.openai = OpenAIAccessor() 
-
         self.pl = Playlist(spotify.sp, self.openai)
+        self.player = Player(spotify.sp)
+
         
     prompt = '(Issue a command)'
 
-    def do_test(self, _):
-        x = self.openai.get_song_info("Beatles", "Octupus's Garden")
-        print(x)
+    def do_play(self, song_idx):
+
+        if len(self.pl.set_data)>0:
+            song_idx = int(song_idx)
+
+            print(f'Loading data for one song to web controller')
+            playlist_data = {'name': self.pl.playlist_name}
+            requests.post(web_controller_url+'/playlist_info',
+                                json=json.dumps(playlist_data))
+
+            one_song_list = []
+            one_song_list.append(self.pl.set_data[song_idx])
+            requests.post(web_controller_url+'/load_onesong',
+                                json=json.dumps(one_song_list))
+
+            
+
+            print(self.pl.set_data[song_idx]['song_name'])
+            self.player.play_track(self.pl.set_data[song_idx]['id'])
+        else:
+            print('Empty list of songs to play!')
         
-    
+        
     def do_webload(self, _):
-        global playlist_name
 
         print(f'Loading set list data to web controller')
-        playlist_data = {'name': playlist_name}
+        playlist_data = {'name': self.pl.playlist_name}
         requests.post(web_controller_url+'/playlist_info',
                             json=json.dumps(playlist_data))
 
         requests.post(web_controller_url+'/load_setlist',
-                            json=json.dumps(set_data))
+                            json=json.dumps(self.pl.set_data))
 
-    def do_playlists(self, sub_command=None):
+    def do_lists(self, sub_command=None):
         """Display all Spotify playlists for the authorized Spotify user."""
         playlists = self.pl.get_playlists()
         print('\nThese are your playlists:')
         for k in playlists.keys():
             print(f'{k}: {playlists[f"{k}"][0]}')
 
+    def do_displaylist(self, list_number):
+        """Show the names of tracks in a Spotify playlist."""
+        if list_number:
+            self.pl.process_playlist(list_number, False)
+        else:
+            print('You must enter the number of a playlist to show its tracks')
+
+    def do_musicplayers(self, _):
+        """List the music players that Spotify can use to play tracks. The first such player
+        that is marked 'Active' in Spotify is selected to play your songs."""
+        if self.player:
+            self.player.show_available_players()
+        else:
+            print('No players can be listed.')
+
+    def do_clearweb(self, _):
+        requests.get(web_controller_url+'/api/clear')
+
     def do_stagelist(self, list_number):
         """Show the names of tracks in a Spotify playlist."""
         if list_number:
-            self.pl.process_playlist(list_number)
+            self.pl.process_playlist(list_number, True)
         else:
             print('You must enter the number of a playlist to stage its tracks')
 
+    def do_pause(self, _):
+        self.sp.pause_playback()
+
     def do_quit(self, args):
-        """ 
-        Quit the game, stopping the music player if it's playing and
-        cleaning up as necessary. The state of a game in progress is saved
-        so you can use continuegame to resume a game if you want.
-        """
+        if not self.player.paused:
+            self.sp.pause_playback()
+    
         raise ExitCmdException()
 
 #-------------------------------------------------------------------
@@ -228,7 +202,7 @@ if __name__ == '__main__':
         except Exception as e:
             exception_name = e.__class__.__name__
     
-            if exception_name == 'ExitCmdException':
+            if exception_name == 'ExitCmdException' or exception_name == 'SpotifyException':
                 continue_running = False
                 print('\nEXITING the program...')
                 os._exit(0)

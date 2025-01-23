@@ -33,6 +33,11 @@ def admin():
     global playlist_name
     return render_template('admin.html', playlist_name=playlist_name)
 
+@app.route('/listener', methods=['GET'])
+def listener():
+    global playlist_name
+    return render_template('listener.html', playlist_name=playlist_name)
+
 @app.route('/api/song_played', methods=['POST'])
 def song_played():
     global songs_played
@@ -53,7 +58,18 @@ def song_played():
         print(f'Song id not received in request')
         return jsonify(success=False, message=f'Song id not received')
 
-    
+@app.route('/api/clear', methods=['GET'])
+def clear():
+    global playlist_name
+    playlist_name=' '
+    setlist_data.clear() 
+    return render_template('listener.html', playlist_name=playlist_name)  
+
+@app.route('/api/get_playlist_name', methods=['GET'])
+def get_playlist_name():
+    global playlist_name
+    name_json= playlist_name
+    return jsonify(name_json) 
 
 """
 The set list is prepared by the engine and posted here as a list of JSON
@@ -73,10 +89,33 @@ def load_setlist():
     json_string = request.get_json()
     setlist_data = json.loads(json_string)
 
+    print('======>>  ', len(setlist_data))
+
     for _ in range(0, len(setlist_data)):
         songs_info.append({'info': setlist_data[_]['song_info'], 'name': setlist_data[_]['song_name'] })
         print(songs_info[_]['name'])
     
+    # Respond to the client with an OK status (jsonify with no args does this)
+    return jsonify()
+
+@app.route('/load_onesong',methods=['POST'])
+def load_onesong():
+    global setlist_data
+    global songs_info
+
+    # First, clear out the setlist and info in case there's already something there
+    # setlist_data.clear()
+    # songs_info.clear()
+
+    # Data posted here by the engine is saved in global data for retrieval
+    # by requests issued to /get_rows from a web page wanting to view the set list
+    json_string = request.get_json()
+    raw_data = json.loads(json_string)
+
+    for _ in range(0, len(raw_data)):
+        songs_info.append({'info': raw_data[_]['song_info'], 'name': raw_data[_]['song_name'] })
+        setlist_data.append(raw_data[_])
+        
     # Respond to the client with an OK status (jsonify with no args does this)
     return jsonify()
 
@@ -122,6 +161,16 @@ def get_rows():
     if caller == 'admin':
         for song_number in range(len(setlist_data)):
             row_data = setlist_data[song_number]
+            a_row = list()
+            a_row.append(f"{row_data['song_name']}")
+            a_row.append(f"{row_data['artist_name']}")
+            a_row.append(f"{row_data['album_name']}")
+            a_row.append(f"{row_data['year_released']}")
+            a_row.append(f"{song_number}")
+            rows.append(a_row)
+    elif caller == 'listener':
+        for song_number in range(len(setlist_data)):
+            row_data = setlist_data[len(setlist_data)-song_number-1]
             a_row = list()
             a_row.append(f"{row_data['song_name']}")
             a_row.append(f"{row_data['artist_name']}")
