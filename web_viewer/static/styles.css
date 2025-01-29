@@ -130,8 +130,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0px; /* Space between rows */
-    margin-top: 50px; /* Create space below the fixed header */
-    padding: 5px;
+    margin-top: 0px; /* Create space below the fixed header */
+    padding: 0px;
 } 
 .row {
     display: flex; /* Use Flexbox for row layout */

@@ -28,3 +28,14 @@ Next issue 'stagelist n', where n is the number of the playlist you want to load
 During stagelist processing, OpenAI is called to write a blurb about each song.
 
 After a list is staged, issue the 'webload' command. This pushes the song information, including the OpenAI blurbs, to the web server.
+=============
+The command displaylist also takes a list number and pushes the list of items to the web server. It is a shortcut that both loads Spotify metadata (like stagelist) and loads it (like webload). The stagelist command also calls OpenAI to create a song info blurb.
+
+==============
+About the web server: It supports three views. 
+ - The 'main' view is accessed via the root, eg http://localhost:8081. Tracks are fed from the admin view via clicks.
+ - The 'admin' view is accessed http://localhost:8081/admin. It is used to feed the main view via clicks on tracks.
+ - The 'listener' view is accessed http://localhost:8081/listener. The engine feeds this view as tracks are played.
+
+===============
+The engine incorporates a player that uses a list loaded by either displaylist or stagelist.

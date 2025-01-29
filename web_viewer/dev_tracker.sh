@@ -5,4 +5,4 @@ export USING_PORT=8081
 export UPDATE_INTERVAL=1
 export DEBUG_MODE=True
 
-python setlist_web.py
+python -i setlist_web.py

@@ -61,8 +61,11 @@ def song_played():
 @app.route('/api/clear', methods=['GET'])
 def clear():
     global playlist_name
+    global setlist_data
+    global songs_info
     playlist_name=' '
     setlist_data.clear() 
+    songs_info.clear()
     return render_template('listener.html', playlist_name=playlist_name)  
 
 @app.route('/api/get_playlist_name', methods=['GET'])
@@ -114,6 +117,7 @@ def load_onesong():
 
     for _ in range(0, len(raw_data)):
         songs_info.append({'info': raw_data[_]['song_info'], 'name': raw_data[_]['song_name'] })
+        print(f'{songs_info}')
         setlist_data.append(raw_data[_])
         
     # Respond to the client with an OK status (jsonify with no args does this)
@@ -170,13 +174,17 @@ def get_rows():
             rows.append(a_row)
     elif caller == 'listener':
         for song_number in range(len(setlist_data)):
+            # The listener view shows the rows in a last-in-first-out manner, so
+            # the data has to be viewed from last element to first element.
+            # Hence the indexing gymnastics below...
             row_data = setlist_data[len(setlist_data)-song_number-1]
             a_row = list()
             a_row.append(f"{row_data['song_name']}")
             a_row.append(f"{row_data['artist_name']}")
             a_row.append(f"{row_data['album_name']}")
             a_row.append(f"{row_data['year_released']}")
-            a_row.append(f"{song_number}")
+            info_idx = len(setlist_data) - song_number - 1
+            a_row.append(f"{info_idx}")
             rows.append(a_row)
     else:
         for song_idx in range(len(songs_played)):    

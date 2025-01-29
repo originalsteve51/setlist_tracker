@@ -10,7 +10,6 @@ class Playlist():
     def __init__(self, sp, ai):
         self.sp = sp
         self.ai = ai
-        self.track_set = set(())
         self.set_data = []
         self.playlist_name = ''
 
@@ -62,31 +61,27 @@ class Playlist():
                 track_id = track['id']
                 #track_urn = f'spotify:track:{track_id}'
                 #track_info = sp.track(track_urn)
-                # artist_name = track_info['album']['artists'][0]['name']
-                # print(track['name'], artist_name)
                 row_data['song_name'] = track['name']
                 row_data['artist_name'] = artist_name
                 row_data['album_name'] = album_name
                 row_data['id'] = track_id
-                # row_data['year_released'] = '1998'
-
+                
                 album_response = self.sp.album(album_id)
                 release_date = 'Unknown'
                 if 'release_date' in album_response.keys():
                     release_date = album_response['release_date']
-                else:
-                    release_date = 'Unknown'
                 row_data['year_released'] = release_date
                 
                 if call_ai:
                     if idx < max_ai_calls_for_info:
                         row_data['song_info'] = self.ai.get_song_info(artist_name, row_data['song_name'])
                     else:
-                        row_data['song_info'] = 'Not available due to test mode'
+                        row_data['song_info'] = f'{idx}: Not available due to test mode'
                 else:
-                    row_data['song_info'] = 'Not requested by caller'
+                    row_data['song_info'] = f'{idx}: Not requested by caller'
                 self.set_data.append(row_data)  
                 song_name_len = len(row_data['song_name'])
+
                 tab_str = ''
-                print(f"{idx}, {row_data['song_name']}, {tab_str} {row_data['artist_name']}")  
+                print(f"{idx}, {row_data['song_name']}, {tab_str} {row_data['artist_name']}. '\n',{row_data['song_info']}")
 
